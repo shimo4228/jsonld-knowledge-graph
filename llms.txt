@@ -1,0 +1,37 @@
+# claude-skill-jsonld-knowledge-graph
+
+> A Claude Code skill (documentation-only, MIT, v0.1.0) that designs and ships a companion JSON-LD knowledge graph (`graph.jsonld`) next to `llms.txt` for projects with stable concept-level structure. Encodes domain entities and relationships as schema.org triples so LLM search engines (ChatGPT, Perplexity, Gemini, Claude) can cite the structure machine-readably. Pairs with `llms-txt-writer` (which owns prose / navigator wording).
+
+## Core documentation
+
+- [SKILL.md](skills/jsonld-knowledge-graph/SKILL.md): full skill specification — when-to-use gate, 9 reusable design moves, schema vocabulary design criteria, cross-graph `@id` discipline, bilingual strategy, companion file wiring, verification workflow, maintenance contract
+- [inspiration.md](skills/jsonld-knowledge-graph/inspiration.md): origin story and canonical implementation pointers (kept separate from `SKILL.md` for portability)
+- [README.md](README.md): human-facing narrative (install, how it works, key concept, related skills)
+- [CHANGELOG.md](CHANGELOG.md): release notes (v0.1.0 initial release)
+
+## The 9 design moves
+
+The skill prescribes nine reusable moves that turn an ad-hoc JSON-LD file into a stable, LLM-citable artifact:
+
+1. Dual `@type` on every node (custom namespace + schema.org base)
+2. Language-tagged literals for bilingual (`@language` per `@value`, single file for en/ja)
+3. Schema absence enforces forbidden relationships (don't define edge types you must never use)
+4. Cross-graph `@id` reuse so JSON-LD processors merge triples across files
+5. Volatile state (version, count, churning enums) excluded at schema level
+6. Matrix encoding via paired complementary edges (e.g. `appliesTo` + `realizedBy`)
+7. Root `Dataset` node so crawlers see the graph's purpose and entry points
+8. Reading-order block in `llms.txt` directing AI to read `graph.jsonld` first
+9. Reverse-link from line repos to hub graph in hub-and-spoke topology
+
+## Standard reference
+
+- [llmstxt.org](https://llmstxt.org/): Answer.AI's `llms.txt` proposal (Jeremy Howard, 2024) — the two-file `llms.txt` + `llms-full.txt` layout this skill's companion-file wiring extends
+- [schema.org](https://schema.org/): the base vocabulary the graph's nodes anchor to (`Dataset`, `ScholarlyArticle`, `DefinedTerm`, `SoftwareSourceCode`, etc.)
+- [JSON-LD 1.1](https://www.w3.org/TR/json-ld11/): the `@id` reuse and triple-merge behavior the skill depends on
+
+## Sibling skills
+
+- [claude-skill-llms-txt-writer](https://github.com/shimo4228/claude-skill-llms-txt-writer): owns prose / navigator wording for `llms.txt` / `llms-full.txt`. Reads this skill's reading-order block requirement.
+- [claude-skill-context-sync](https://github.com/shimo4228/claude-skill-context-sync): audits drift between `graph.jsonld` and CODEMAPS (Maintain phase).
+- [claude-skill-search-first](https://github.com/shimo4228/claude-skill-search-first): research-before-coding workflow.
+- [claude-skill-writing-ecosystem](https://github.com/shimo4228/claude-skill-writing-ecosystem): human-facing writing orchestrator (different concern: human readers, not AI crawlers).

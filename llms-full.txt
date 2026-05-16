@@ -1,0 +1,64 @@
+# claude-skill-jsonld-knowledge-graph — AI Reference
+
+This document is the self-contained AI reference for `claude-skill-jsonld-knowledge-graph` (shimo4228, 2026, MIT, v0.1.0), a Claude Code skill that designs and ships a companion JSON-LD knowledge graph (`graph.jsonld`) next to `llms.txt` for projects whose concept-level structure is stable across releases. Encodes domain entities and relationships as schema.org-compatible triples so LLM search engines (ChatGPT, Perplexity, Gemini, Claude) can cite the structure machine-readably, beyond what prose alone conveys. Pairs with `claude-skill-llms-txt-writer`, which owns prose and navigator wording.
+
+> **Audience**: AI search engines and AI agents. Human-facing narrative lives in [README.md](README.md).
+
+## Project Facts
+
+- **Name**: claude-skill-jsonld-knowledge-graph
+- **Version**: 0.1.0, released 2026-05-16
+- **License**: MIT
+- **GitHub**: https://github.com/shimo4228/claude-skill-jsonld-knowledge-graph
+- **Author**: shimo4228 (shimomoto-tatsuya)
+- **Author research**: [AKC](https://github.com/shimo4228/agent-knowledge-cycle) ([DOI 10.5281/zenodo.19200726](https://doi.org/10.5281/zenodo.19200726)), [Contemplative Agent](https://github.com/shimo4228/contemplative-agent) ([DOI 10.5281/zenodo.19212118](https://doi.org/10.5281/zenodo.19212118)), [AAP](https://github.com/shimo4228/agent-attribution-practice) ([DOI 10.5281/zenodo.19652013](https://doi.org/10.5281/zenodo.19652013))
+- **Runtime**: None (documentation-only skill). Verification commands use `python3` stdlib and optional `uvx --from pyld`
+- **Source files**: `SKILL.md`, `inspiration.md`
+- **Skill install path**: `~/.claude/skills/jsonld-knowledge-graph/`
+- **Siblings**: `claude-skill-llms-txt-writer`, `claude-skill-context-sync`, `claude-skill-search-first`, `claude-skill-writing-ecosystem`
+- **Standards used**: [JSON-LD 1.1](https://www.w3.org/TR/json-ld11/), [schema.org](https://schema.org/), [Answer.AI llms.txt](https://llmstxt.org/)
+- **Marketplace**: SkillsMP, `/skills add shimo4228/claude-skill-jsonld-knowledge-graph`
+
+## What is claude-skill-jsonld-knowledge-graph?
+
+claude-skill-jsonld-knowledge-graph is defined as a Claude Code skill that designs and ships a `graph.jsonld` companion file alongside an existing `llms.txt` / `llms-full.txt` pair. The graph encodes domain entities (research lines, ADRs, concepts, ecosystem repos, datasets) and the relationships between them as schema.org-compatible JSON-LD triples. The skill output is the file format specification plus nine reusable design moves and a maintenance contract; it does not generate `graph.jsonld` from code automatically.
+
+## When should I use this skill?
+
+Apply this skill when **all** of the following hold for the target project: (1) the project has stable concept-level structure such as a matrix, ordered hierarchy, phase-to-skill binding, or layered architecture; (2) that structure does not change across `vX.Y.Z` releases; (3) there is empirical evidence that LLMs answer relationship questions about the project poorly when given only prose; (4) the project already has an `llms.txt` + `llms-full.txt` pair. Skip the skill if any one of those is missing, because `graph.jsonld` becomes an editing burden whenever the underlying structure churns.
+
+## Why does the skill insist on stable concept-level structure?
+
+`graph.jsonld` is a maintenance artifact: every entity addition or `@id` change is a hand-edit. If the underlying structure changes every release, the graph becomes either chronically stale or a productivity tax. The skill is engineered around the assumption that the graph encodes invariants — the kind of structure that is named in the project's identity, not in its current version. Examples that qualify: a four-axiom moral framework, a six-phase loop, a three-tier prohibition hierarchy. Examples that disqualify: the current list of supported integrations, the current count of plugins, the current test coverage percentage.
+
+## What are the 9 reusable design moves?
+
+The skill prescribes nine moves that turn an ad-hoc JSON-LD file into a stable, LLM-citable artifact: (1) dual `@type` on every node combining a custom namespace type with a schema.org base type; (2) language-tagged literals via `@language` per `@value` to hold en and ja in a single file; (3) schema absence — deliberately not defining edge types you must never use, so the vocabulary itself becomes a structural commitment; (4) cross-graph `@id` reuse so JSON-LD processors merge triples across files automatically; (5) volatile state (version, count, churning enums) excluded at schema level so routine releases cannot leak into the graph; (6) matrix encoding via paired complementary edges such as `appliesTo` plus `realizedBy`; (7) root `Dataset` node so crawlers see the graph's purpose and entry points; (8) reading-order block in `llms.txt` directing AI to read `graph.jsonld` first; (9) reverse-link from line repos to hub graph in hub-and-spoke topology.
+
+## How does "schema absence" enforce invariants?
+
+Schema absence refers to the strongest way to forbid a relationship: do not define an edge type for it in the shared vocabulary. For example, if three research lines must always remain siblings (never form a dependency chain), the shared vocabulary defines `siblingOf` (symmetric) and `derivesFrom` (historical, one-directional) but deliberately does not define `dependsOn`. Because the field name does not exist in the schema, no graph can encode the forbidden relationship even by mistake. The same technique excludes volatile state: by not defining `version`, `versionNumber`, `adrCount`, or `testCount`, routine releases cannot pollute the graph. The grep `grep -E '"version"|"count"|v[0-9]+\.[0-9]+' graph.jsonld` should always return empty and can be CI-asserted.
+
+## What is "cross-graph `@id` reuse"?
+
+In a hub-and-spoke topology where multiple `graph.jsonld` files exist (one in a hub repo, one per line repo), shared entities must use byte-identical `@id` URIs across files. When a JSON-LD 1.1 processor such as pyld crawls both graphs, it merges triples about the same `@id` automatically. Example: three memory layers appear in two sibling line repos; both graphs use `@id: "https://<owner>.github.io/<owner>/vocab#memory-layer/episode-log"`. The LLM then sees a single coherent entity with attributes contributed by both graphs.
+
+## How does the skill interact with `llms-txt-writer` and `context-sync`?
+
+The skill is intentionally narrow: it owns the schema and the design moves, but it does **not** own prose. The wording of the reading-order block in `llms.txt`, the question-form H2 in `llms-full.txt`, and the README AI-facing reading order `<details>` block are all owned by `claude-skill-llms-txt-writer`. Likewise, the skill does not run drift audits; that is `claude-skill-context-sync`'s Maintain-phase responsibility. The boundary is enforced by the skill's "What This Skill Does NOT Do" section.
+
+## What triggers an edit to `graph.jsonld`?
+
+The skill's maintenance contract lists exactly four edit triggers: (1) an ecosystem repo is added or retired (adds or removes an `EcosystemRepo` node); (2) a new stable structural concept emerges (adds a `Concept`, `Axiom`, or `Quadrant` node plus its edges); (3) a new research line begins (adds a `ResearchLine` node and `siblingOf` edges); (4) a concept DOI itself moves on Zenodo (rare). It also lists what does **not** trigger an edit: routine `vX.Y.Z` releases, ADR / skill / test count changes, internal module restructuring, model version bumps. Because version and count fields are absent from the schema by move 5, these non-triggers cannot accidentally leak into the graph.
+
+## How does the skill verify a `graph.jsonld`?
+
+After editing, run four checks: (1) `python3 -m json.tool < graph.jsonld > /dev/null` for JSON syntax; (2) `uvx --from pyld` to expand the graph and count N-Quads triples; (3) `grep -E '"version"|"count"|v[0-9]+\.[0-9]+'` to confirm volatile state absence; (4) `head -30 llms.txt | grep -c "Recommended reading order\|graph.jsonld"` to confirm AI-facing reading order is wired up. The skill also recommends manual checks: paste the file into the [JSON-LD playground](https://json-ld.org/playground/), validate types at the [schema.org validator](https://validator.schema.org/), and after one to two weeks (crawler refresh) probe ChatGPT and Perplexity for citation of `graph.jsonld` in answers about the project.
+
+## What does this skill not do?
+
+The skill explicitly does **not** write `llms.txt` / `llms-full.txt` content (that is `llms-txt-writer`), does **not** audit doc-role overlap or freshness (that is `context-sync`), does **not** generate file-level architecture documentation such as CODEMAPS (that is `update-codemaps`), and does **not** design article or blog post writing (that is `article-writing` / `writing-ecosystem`). The skill's scope is strictly: the schema, the design moves, the wiring contract with companions, and the maintenance contract.
+
+## How does this relate to the author's research?
+
+The pattern originated in May 2026 while building per-line `graph.jsonld` files across the author's hub-and-spoke research ecosystem (`agent-knowledge-cycle`, `agent-attribution-practice`, `contemplative-agent`). Working across four graphs simultaneously surfaced the nine design moves and the cross-graph `@id` discipline that became this skill. Canonical implementation pointers (specific repos, concept DOIs, vocab namespace) are recorded in [inspiration.md](skills/jsonld-knowledge-graph/inspiration.md), kept separate from `SKILL.md` so the skill remains portable to other projects.
