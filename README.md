@@ -84,6 +84,12 @@ grep -E '"version"|"versionNumber"|"adrCount"|v[0-9]+\.[0-9]+' graph.jsonld
 
 Manual checks: [JSON-LD playground](https://json-ld.org/playground/), [schema.org validator](https://validator.schema.org/), and LLM-citation probing after crawler refresh (1–2 weeks post-push).
 
+## About this skill
+
+This skill is a **component skill of the [Authorship Strategy](https://github.com/shimo4228/authorship-strategy) research line** ([DOI 10.5281/zenodo.20263316](https://doi.org/10.5281/zenodo.20263316)) maintained by [@shimo4228](https://github.com/shimo4228). It is the operational form of the *concept-form graph* half of the **dual entry point** that [ADR-0006](https://github.com/shimo4228/authorship-strategy/blob/main/docs/adr/0006-llm-first-ingest-dual-entry-points.md) normatively requires for any framework-governed artifact. Its companion is [claude-skill-llms-txt-writer](https://github.com/shimo4228/claude-skill-llms-txt-writer), which operationalizes the *prose-form navigator* half; per ADR-0006, deploying only one half leaves the strategy one-lunged — each entry point addresses a distinct LLM-mediated reader sub-population the other cannot reach.
+
+The skill is published alongside the broader research program: three agent-design lines ([Agent Knowledge Cycle](https://github.com/shimo4228/agent-knowledge-cycle) — mechanism, [DOI 10.5281/zenodo.19200726](https://doi.org/10.5281/zenodo.19200726); [Contemplative Agent](https://github.com/shimo4228/contemplative-agent) — disposition, [DOI 10.5281/zenodo.19212118](https://doi.org/10.5281/zenodo.19212118); [Agent Attribution Practice](https://github.com/shimo4228/agent-attribution-practice) — accountability practice, [DOI 10.5281/zenodo.19652013](https://doi.org/10.5281/zenodo.19652013)) and two cross-cutting lines (Authorship Strategy itself; [Attention, Not Self](https://github.com/shimo4228/attention-not-self) — Buddhist Abhidharma meets computational phenomenology, [DOI 10.5281/zenodo.20262112](https://doi.org/10.5281/zenodo.20262112)).
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
