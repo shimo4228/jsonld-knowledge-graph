@@ -4,7 +4,7 @@
 
 ## Core documentation
 
-- [SKILL.md](skills/jsonld-knowledge-graph/SKILL.md): full skill specification — when-to-use gate, 9 reusable design moves, schema vocabulary design criteria, cross-graph `@id` discipline, bilingual strategy, companion file wiring, verification workflow, maintenance contract
+- [SKILL.md](skills/jsonld-knowledge-graph/SKILL.md): full skill specification — when-to-use gate, 9 reusable design moves, schema vocabulary design criteria, cross-graph `@id` discipline, bilingual strategy, companion file wiring, verification workflow, Hugging Face Datasets mirror sync, maintenance contract
 - [inspiration.md](skills/jsonld-knowledge-graph/inspiration.md): origin story and canonical implementation pointers (kept separate from `SKILL.md` for portability)
 - [README.md](README.md): human-facing narrative (install, how it works, key concept, related skills)
 - [CHANGELOG.md](CHANGELOG.md): release notes (v0.1.0 initial release)
@@ -22,6 +22,10 @@ The skill prescribes nine reusable moves that turn an ad-hoc JSON-LD file into a
 7. Root `Dataset` node so crawlers see the graph's purpose and entry points
 8. Reading-order block in `llms.txt` directing AI to read `graph.jsonld` first
 9. Reverse-link from line repos to hub graph in hub-and-spoke topology
+
+## Hugging Face Datasets mirror sync
+
+When `graph.jsonld` is updated and pushed to GitHub, the skill recommends also pushing to a Hugging Face Datasets mirror. HF acts as a primary ingest source for LLM training pipelines and knowledge-graph crawlers, and HF's Auto-converted-to-Parquet makes the graph loadable from `pandas` / `Polars` / `Datasets` directly. The workflow flattens `@graph` array to `.jsonl` (one node per line) via `jq -c`, pushes both `graph.jsonld` and `graph.jsonl` via `hf upload`, and keeps the HF dataset card (`README.md`) manually maintained because it carries HF-specific mirror notices. The GitHub repo ↔ HF dataset mapping is project-specific and lives outside `SKILL.md` (in `CLAUDE.md` or `inspiration.md`) to preserve portability.
 
 ## Standard reference
 

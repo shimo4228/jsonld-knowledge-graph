@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- "Mirror Sync to Hugging Face Datasets" workflow in `SKILL.md` — post-edit step that pushes `graph.jsonld` and `graph.jsonl` (flattened) to a Hugging Face dataset repository, positioning HF as a primary ingest source for LLM training pipelines and knowledge-graph crawlers
+- `jq -c` flattening of `@graph` array to one-node-per-line `.jsonl` for HF Dataset Viewer's Auto-converted-to-Parquet compatibility
+- Project-specific GitHub-repo-to-HF-dataset mapping convention: kept in `CLAUDE.md` or `inspiration.md` (not in `SKILL.md`) to preserve skill portability
+- "When NOT to use this sync" section enumerating skip conditions (no HF dataset repo yet, no `graph.jsonld`, token lacks Write scope)
+
 ## [0.1.0] — 2026-05-16
 
 Initial public release.

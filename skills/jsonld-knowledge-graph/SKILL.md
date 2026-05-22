@@ -277,6 +277,45 @@ head -30 llms.txt | grep -c "Recommended reading order\|graph.jsonld"
 - **schema.org validator**: https://validator.schema.org/ で `Dataset` / `ScholarlyArticle` 等の type が認識されることを確認
 - **LLM citation probe**: graph push 後 1-2 週間（crawler refresh 待ち）、ChatGPT / Perplexity に「<project> の X と Y はどう関係しますか？graph.jsonld を参照してください」と質問し、graph が citation されるか確認
 
+## Mirror Sync to Hugging Face Datasets
+
+graph.jsonld を更新して GitHub に push する際、Hugging Face Datasets 上の mirror にも同期する。HF は LLM training pipeline / knowledge-graph crawler の primary ingest source として機能する（HF dataset は Auto-converted to Parquet が走り、`pandas` / `Polars` / `Datasets` ライブラリから直接 load 可能になる）。
+
+### Workflow
+
+```bash
+# 1. graph.jsonl を再生成 (HF Dataset Viewer 用に @graph array を 1 行 1 node に flatten)
+jq -c '.["@graph"][]' graph.jsonld > graph.jsonl
+
+# 2. GitHub push (通常通り)
+git add graph.jsonld graph.jsonl && git commit -m "..." && git push
+
+# 3. HF mirror に push (graph.jsonld と graph.jsonl 両方)
+hf upload <HF_REPO_ID> graph.jsonld --repo-type dataset
+hf upload <HF_REPO_ID> graph.jsonl --repo-type dataset
+```
+
+HF 側の `README.md` (dataset card) は graph 更新では同期しない。Dataset card は HF 用に customize されている（sibling dataset への link、mirror notice 等）ので、文面を変えたい場合は手動で `hf upload <HF_REPO_ID> README.md --repo-type dataset`。
+
+### Repo mapping (project-specific)
+
+GitHub repo ↔ HF dataset の mapping は project ごとに違うので、skill invoke 時に参照できる場所（project の `CLAUDE.md`、または skill 同一 dir の `inspiration.md`）に記録する。本文には embed しない（portability 確保）。
+
+Mapping の記録 format 例:
+
+```markdown
+| GitHub repo | HF dataset |
+|---|---|
+| `owner/project-a` | `Owner/project-a` |
+| `owner/hub` | `Owner/research-program-hub` |
+```
+
+### When NOT to use this sync
+
+- HF dataset がまだ存在しない project（先に `hf repo create <HF_REPO_ID> --repo-type dataset` で repo 作成、README.md を draft してから initial upload）
+- そもそも graph.jsonld を持たない project（HF mirror は graph を持つ project のみ）
+- Token が write scope を持たない（HF settings で Fine-grained / Write token を発行し直す）
+
 ## Maintenance Contract
 
 graph.jsonld を **編集する trigger**:
