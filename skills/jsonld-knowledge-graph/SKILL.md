@@ -1,6 +1,7 @@
 ---
 name: jsonld-knowledge-graph
 description: Design and ship a companion JSON-LD knowledge graph (graph.jsonld) next to llms.txt for projects with stable concept-level structure. Encodes domain entities and relationships as schema.org triples for LLM citation. Use when project has matrix / hierarchy / phase-binding structure that prose alone leaves implicit, AND that structure is stable across releases. Defers llms.txt navigator wording to llms-txt-writer.
+compatibility: Developed and tested on Claude Code; portable to other Agent Skills-compatible agents.
 origin: shimo4228
 user-invocable: true
 ---
@@ -56,7 +57,7 @@ user-invocable: true
 - ファイルパスが変わった → CODEMAPS 更新（graph.jsonld の `@id` は GitHub blob URL を使っているなら追従が必要）
 - 概念の semantics が変わった → graph.jsonld の description 更新（CODEMAPS は触らなくてよい）
 
-context-sync skill（Maintain phase 担当）がこの drift を audit する。詳細は [claude-skill-context-sync](https://github.com/shimo4228/claude-skill-context-sync) 参照。
+context-sync skill（Maintain phase 担当）がこの drift を audit する。詳細は [context-sync](https://github.com/shimo4228/context-sync) 参照。
 
 ## Required Design Moves
 
@@ -240,7 +241,7 @@ graph.jsonld を作っただけでは crawler に見つからない。`llms.txt`
 | `README.{lang}.md` (追加 mirror がある場合) | summary tag と intro 行のみ localize、bullet list は paths なので en 共通でよい。**ja を超えて mirror を維持するかは traffic data に基づき判断**: human viewers が統計的に存在しない mirror は LLM crawler が en source から多言語 answer する現状を踏まえると不要 |
 | hub-and-spoke の line README | hub graph への reverse-link を上記 block 内に追加 |
 
-詳細な wording は [claude-skill-llms-txt-writer](https://github.com/shimo4228/claude-skill-llms-txt-writer) の `SKILL.md` 内 Companion JSON-LD Graph セクション参照。
+詳細な wording は [llms-txt-writer](https://github.com/shimo4228/llms-txt-writer) の `SKILL.md` 内 Companion JSON-LD Graph セクション参照。
 
 ## Verification Workflow
 

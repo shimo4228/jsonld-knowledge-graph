@@ -1,4 +1,4 @@
-# claude-skill-jsonld-knowledge-graph
+# jsonld-knowledge-graph
 
 > A Claude Code skill (documentation-only, MIT, v0.1.0) that designs and ships a companion JSON-LD knowledge graph (`graph.jsonld`) next to `llms.txt` for projects with stable concept-level structure. Encodes domain entities and relationships as schema.org triples so LLM search engines (ChatGPT, Perplexity, Gemini, Claude) can cite the structure machine-readably. Pairs with `llms-txt-writer` (which owns prose / navigator wording).
 
@@ -35,7 +35,7 @@ When `graph.jsonld` is updated and pushed to GitHub, the skill recommends also p
 
 ## Sibling skills
 
-- [claude-skill-llms-txt-writer](https://github.com/shimo4228/claude-skill-llms-txt-writer): owns prose / navigator wording for `llms.txt` / `llms-full.txt`. Reads this skill's reading-order block requirement.
-- [claude-skill-context-sync](https://github.com/shimo4228/claude-skill-context-sync): audits drift between `graph.jsonld` and CODEMAPS (Maintain phase).
-- [claude-skill-search-first](https://github.com/shimo4228/claude-skill-search-first): research-before-coding workflow.
+- [llms-txt-writer](https://github.com/shimo4228/llms-txt-writer): owns prose / navigator wording for `llms.txt` / `llms-full.txt`. Reads this skill's reading-order block requirement.
+- [context-sync](https://github.com/shimo4228/context-sync): audits drift between `graph.jsonld` and CODEMAPS (Maintain phase).
+- [search-first](https://github.com/shimo4228/search-first): research-before-coding workflow.
 - [claude-skill-writing-ecosystem](https://github.com/shimo4228/claude-skill-writing-ecosystem): human-facing writing orchestrator (different concern: human readers, not AI crawlers).

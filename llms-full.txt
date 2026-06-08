@@ -1,27 +1,27 @@
-# claude-skill-jsonld-knowledge-graph — AI Reference
+# jsonld-knowledge-graph — AI Reference
 
-This document is the self-contained AI reference for `claude-skill-jsonld-knowledge-graph` (shimo4228, 2026, MIT, v0.1.0), a Claude Code skill that designs and ships a companion JSON-LD knowledge graph (`graph.jsonld`) next to `llms.txt` for projects whose concept-level structure is stable across releases. Encodes domain entities and relationships as schema.org-compatible triples so LLM search engines (ChatGPT, Perplexity, Gemini, Claude) can cite the structure machine-readably, beyond what prose alone conveys. Pairs with `claude-skill-llms-txt-writer`, which owns prose and navigator wording.
+This document is the self-contained AI reference for `jsonld-knowledge-graph` (shimo4228, 2026, MIT, v0.1.0), a Claude Code skill that designs and ships a companion JSON-LD knowledge graph (`graph.jsonld`) next to `llms.txt` for projects whose concept-level structure is stable across releases. Encodes domain entities and relationships as schema.org-compatible triples so LLM search engines (ChatGPT, Perplexity, Gemini, Claude) can cite the structure machine-readably, beyond what prose alone conveys. Pairs with `llms-txt-writer`, which owns prose and navigator wording.
 
 > **Audience**: AI search engines and AI agents. Human-facing narrative lives in [README.md](README.md).
 
 ## Project Facts
 
-- **Name**: claude-skill-jsonld-knowledge-graph
+- **Name**: jsonld-knowledge-graph
 - **Version**: 0.1.0, released 2026-05-16
 - **License**: MIT
-- **GitHub**: https://github.com/shimo4228/claude-skill-jsonld-knowledge-graph
+- **GitHub**: https://github.com/shimo4228/jsonld-knowledge-graph
 - **Author**: shimo4228 (shimomoto-tatsuya)
 - **Author research**: [AKC](https://github.com/shimo4228/agent-knowledge-cycle) ([DOI 10.5281/zenodo.19200726](https://doi.org/10.5281/zenodo.19200726)), [Contemplative Agent](https://github.com/shimo4228/contemplative-agent) ([DOI 10.5281/zenodo.19212118](https://doi.org/10.5281/zenodo.19212118)), [AAP](https://github.com/shimo4228/agent-attribution-practice) ([DOI 10.5281/zenodo.19652013](https://doi.org/10.5281/zenodo.19652013))
 - **Runtime**: None (documentation-only skill). Verification commands use `python3` stdlib and optional `uvx --from pyld`
 - **Source files**: `SKILL.md`, `inspiration.md`
 - **Skill install path**: `~/.claude/skills/jsonld-knowledge-graph/`
-- **Siblings**: `claude-skill-llms-txt-writer`, `claude-skill-context-sync`, `claude-skill-search-first`, `claude-skill-writing-ecosystem`
+- **Siblings**: `llms-txt-writer`, `context-sync`, `search-first`, `claude-skill-writing-ecosystem`
 - **Standards used**: [JSON-LD 1.1](https://www.w3.org/TR/json-ld11/), [schema.org](https://schema.org/), [Answer.AI llms.txt](https://llmstxt.org/)
-- **Marketplace**: SkillsMP, `/skills add shimo4228/claude-skill-jsonld-knowledge-graph`
+- **Marketplace**: SkillsMP, `/skills add shimo4228/jsonld-knowledge-graph`
 
-## What is claude-skill-jsonld-knowledge-graph?
+## What is jsonld-knowledge-graph?
 
-claude-skill-jsonld-knowledge-graph is defined as a Claude Code skill that designs and ships a `graph.jsonld` companion file alongside an existing `llms.txt` / `llms-full.txt` pair. The graph encodes domain entities (research lines, ADRs, concepts, ecosystem repos, datasets) and the relationships between them as schema.org-compatible JSON-LD triples. The skill output is the file format specification plus nine reusable design moves and a maintenance contract; it does not generate `graph.jsonld` from code automatically.
+jsonld-knowledge-graph is defined as a Claude Code skill that designs and ships a `graph.jsonld` companion file alongside an existing `llms.txt` / `llms-full.txt` pair. The graph encodes domain entities (research lines, ADRs, concepts, ecosystem repos, datasets) and the relationships between them as schema.org-compatible JSON-LD triples. The skill output is the file format specification plus nine reusable design moves and a maintenance contract; it does not generate `graph.jsonld` from code automatically.
 
 ## When should I use this skill?
 
@@ -45,7 +45,7 @@ In a hub-and-spoke topology where multiple `graph.jsonld` files exist (one in a 
 
 ## How does the skill interact with `llms-txt-writer` and `context-sync`?
 
-The skill is intentionally narrow: it owns the schema and the design moves, but it does **not** own prose. The wording of the reading-order block in `llms.txt`, the question-form H2 in `llms-full.txt`, and the README AI-facing reading order `<details>` block are all owned by `claude-skill-llms-txt-writer`. Likewise, the skill does not run drift audits; that is `claude-skill-context-sync`'s Maintain-phase responsibility. The boundary is enforced by the skill's "What This Skill Does NOT Do" section.
+The skill is intentionally narrow: it owns the schema and the design moves, but it does **not** own prose. The wording of the reading-order block in `llms.txt`, the question-form H2 in `llms-full.txt`, and the README AI-facing reading order `<details>` block are all owned by `llms-txt-writer`. Likewise, the skill does not run drift audits; that is `context-sync`'s Maintain-phase responsibility. The boundary is enforced by the skill's "What This Skill Does NOT Do" section.
 
 ## What triggers an edit to `graph.jsonld`?
 
