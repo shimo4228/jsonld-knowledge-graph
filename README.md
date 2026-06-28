@@ -1,6 +1,6 @@
 # jsonld-knowledge-graph
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/shimo4228/jsonld-knowledge-graph) [![GitMCP](https://img.shields.io/endpoint?url=https://gitmcp.io/badge/shimo4228/jsonld-knowledge-graph)](https://gitmcp.io/shimo4228/jsonld-knowledge-graph)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/shimo4228/jsonld-knowledge-graph) [![GitMCP](https://img.shields.io/endpoint?url=https://gitmcp.io/badge/shimo4228/jsonld-knowledge-graph)](https://gitmcp.io/shimo4228/jsonld-knowledge-graph) [![View Code Wiki](https://assets.codewiki.google/readme-badge/static.svg)](https://codewiki.google/github.com/shimo4228/jsonld-knowledge-graph)
 
 A [Claude Code skill](https://docs.claude.com/en/docs/claude-code/skills) that designs and ships a companion **JSON-LD knowledge graph** (`graph.jsonld`) next to `llms.txt` for projects whose concept-level structure is stable across releases.
 
