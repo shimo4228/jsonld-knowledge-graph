@@ -37,10 +37,11 @@ Skill formalization shipped after these (this file).
 
 ## Why moved out of SKILL.md
 
-Per the author's skill portability convention: a skill's body should stay
-generic and reusable across projects, while specific canonical implementations,
-origin stories, and personal repo references belong in a separate `inspiration.md`
-(or equivalent) so the skill itself can be adopted by other projects that don't
-share this origin context.
+Per shimo4228 skill portability rule (`~/.claude/rules/common/skills.md`):
 
-This file is that companion `inspiration.md`.
+> 個人プロジェクト URL を本文に埋め込まない: 自分の canonical implementation、個人 repo、特定プロジェクト内のパスへの link は、skill を一人のユーザの filesystem / 一つのプロジェクトのライフサイクルに縛るため、本文に入れない
+>
+> 具体例・origin story の置き場所:
+> - 個人プロジェクト参照・origin story・canonical implementation → `inspiration.md`、ADR Notes、memory、または同一 repo 内の "Related Projects" ファイルへ
+
+This file is the inspiration.md that the rule prescribes.

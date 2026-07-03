@@ -57,7 +57,7 @@ user-invocable: true
 - ファイルパスが変わった → CODEMAPS 更新（graph.jsonld の `@id` は GitHub blob URL を使っているなら追従が必要）
 - 概念の semantics が変わった → graph.jsonld の description 更新（CODEMAPS は触らなくてよい）
 
-context-sync skill（Maintain phase 担当）がこの drift を audit する。詳細は [context-sync](https://github.com/shimo4228/context-sync) 参照。
+context-sync skill（Maintain phase 担当）がこの drift を audit する。詳細は `~/.claude/skills/context-sync/SKILL.md` 参照。
 
 ## Required Design Moves
 
@@ -156,6 +156,19 @@ https://github.com/<owner>/<hub>/blob/main/graph.jsonld
 
 LLM が個別 line repo から入ってきた場合でも hub graph へ戻れる。1 段目の探索後に broader context へ広げる経路。
 
+**散文リンクだけでは不十分** — README 逆リンクは人間/プレーンテキスト向け。グラフ層でも各 spoke の **self-node に機械可読な上向き edge** を張る:
+
+```json
+// 各 line / supporting repo の self-node (ResearchLine or Dataset) に:
+"isPartOf": "https://github.com/<owner>/<hub>"   // hub の canonical @id (bare-repo URL に統一)
+```
+
+- hub→spoke は `mainEntity` / `siblingOf`、spoke→hub は `isPartOf` で双方向化 (`isPartOf` の厳密な逆は `hasPart` だが、独立 triple として有効)
+- target @id は **全 repo で同一の canonical hub node** に揃える (bare-repo `github.com/<owner>/<hub>` 推奨)。揃わないと merge 時に hub が複数ノードに割れて join 不能
+- `isPartOf` は context に `{"@id":"https://schema.org/isPartOf","@type":"@id"}` を宣言 (無いと「IRI 文字列の literal 化」と同じく literal になる)。context を触れない content graph では inline `{"@id":"..."}` で node 参照を強制
+- self-node を持たない content-only graph (Article 列挙のみ等) には最小 Dataset self-node を1個新設し、そこに `isPartOf` を張る
+- **監査**: 新 repo 追加時、全 spoke の self-node が `isPartOf→hub` を持つか確認。実地では下向き (hub→spoke) だけ張られ、上向きが大半の spoke で抜けていた
+
 ## Schema Vocabulary 設計
 
 新規 type / edge を導入する判断基準:
@@ -241,7 +254,7 @@ graph.jsonld を作っただけでは crawler に見つからない。`llms.txt`
 | `README.{lang}.md` (追加 mirror がある場合) | summary tag と intro 行のみ localize、bullet list は paths なので en 共通でよい。**ja を超えて mirror を維持するかは traffic data に基づき判断**: human viewers が統計的に存在しない mirror は LLM crawler が en source から多言語 answer する現状を踏まえると不要 |
 | hub-and-spoke の line README | hub graph への reverse-link を上記 block 内に追加 |
 
-詳細な wording は [llms-txt-writer](https://github.com/shimo4228/llms-txt-writer) の `SKILL.md` 内 Companion JSON-LD Graph セクション参照。
+詳細な wording は `~/.claude/skills/llms-txt-writer/SKILL.md` の Companion JSON-LD Graph セクション参照。
 
 ## Verification Workflow
 
@@ -272,6 +285,50 @@ head -30 llms.txt | grep -c "Recommended reading order\|graph.jsonld"
 # (manual: 各 ResearchLine @id を Zenodo で開いて parent record であることを確認)
 ```
 
+### Context pitfalls — edge が静かに消える 2 パターン
+
+production graph 6 本の監査 (2026-06) で実際に発生した。いずれも JSON は valid のまま、
+triple count も変わらないため、上記 step 1-2 では検出できない:
+
+1. **IRI 文字列の literal 化**: `@vocab` があっても、context で `@type: "@id"` 強制の
+   ない property（schema.org の `author` / `creator` 等）に IRI を文字列で渡すと literal
+   になり、node への edge にならない。Person node が graph に居ても誰からも参照されない。
+   - 対策: IRI 参照は常に `{"@id": "https://..."}` オブジェクト形式で書く
+2. **未定義 key の無言ドロップ**: `@vocab` なしの明示マッピング型 context では、context に
+   無い key（`sameAs` 等）が expansion で警告なく消える。
+   - 対策: graph に新しい property を導入する前に context マッピングの存在を確認する
+
+検出は同梱の lint script が決定論的に行う（上記 step 1-3 の機械チェックも包含するので、編集後はこれ 1 コマンドでよい）:
+
+```bash
+# 6. graph lint — JSON validity / expansion / DROPPED-KEY / URL-LITERAL / VOLATILE を一括検査
+#    exit 0 = clean, 1 = findings, 2 = fatal。複数ファイル可
+uv run --with pyld python3 ~/.claude/skills/jsonld-knowledge-graph/scripts/graph_lint.py graph.jsonld
+
+# locator 系 property（url / license / contentUrl）は literal URL を許容。変更する場合:
+#   --allow-literal-url url,license,contentUrl,codeRepository
+
+# 複数 graph を渡すと cross-file の NAME-DRIFT も検査する
+# （同一 IRI に複数の異なる en name → 検出は構造的・決定論的。どれを正とするかの
+#   解決だけが judgment なので、lint は報告のみ。表記揺れの正解は alternateName に置く）
+uv run --with pyld python3 ~/.claude/skills/jsonld-knowledge-graph/scripts/graph_lint.py hub/graph.jsonld line1/graph.jsonld line2/graph.jsonld
+#   --skip-name-drift で省略可
+```
+
+修正の定石: 値の書き換えではなく **@context への coercion 追加** で直す（`"sameAs": {"@id": "https://schema.org/sameAs", "@type": "@id"}` を足せば既存の文字列値がそのまま IRI として解釈される。diff が context の数行で済む）。
+
+#### なぜ自作 lint か（external research, 2026-06）
+
+標準ツールを調査した上での Build 判定。再調査不要:
+
+- **[pySHACL](https://github.com/RDFLib/pySHACL)** (RDFLib): 活発に維持されている W3C 標準の RDF 検証器。ただし**展開後の RDF graph に対して動く**ため、DROPPED-KEY は原理的に検出できない（落ちた key は SHACL が見る前に消えている）。URL-LITERAL は `sh:nodeKind sh:IRI` で書けるが、predicate ごとの shapes ファイル維持が必要
+- **[jsonld-lint](https://github.com/mattrglobal/jsonld-lint)** (Mattr): un-mapped term 検出（= DROPPED-KEY）を持つ唯一の専用 linter だったが **2024-12 にアーカイブ済み**。採用不可
+- **jsonld.js の safe mode**: 展開時に未定義 term をエラー化できるが JS 専用。Python 側の pyld に相当機能なし
+
+つまり最も危険な DROPPED-KEY が標準ツールの死角にあり、VOLATILE はプロジェクト固有ポリシーなので、薄い自作 lint が正当。
+
+**pySHACL への移行条件**: 「すべての ResearchLine ノードは author と sameAs を持つ」のような**クラス単位の必須制約**を宣言的に強制したくなった時点で、URL-LITERAL 検査を shapes.ttl + pyshacl に置き換え、DROPPED-KEY / VOLATILE のみ graph_lint.py に残す構成に移行する。
+
 ### Manual checks
 
 - **JSON-LD playground**: https://json-ld.org/playground/ に paste して `@context` が解決し triple として展開されることを確認
@@ -280,27 +337,19 @@ head -30 llms.txt | grep -c "Recommended reading order\|graph.jsonld"
 
 ## Mirror Sync to Hugging Face Datasets
 
-graph.jsonld を更新して GitHub に push する際、Hugging Face Datasets 上の mirror にも同期する。HF は LLM training pipeline / knowledge-graph crawler の primary ingest source として機能する（HF dataset は Auto-converted to Parquet が走り、`pandas` / `Polars` / `Datasets` ライブラリから直接 load 可能になる）。
+graph.jsonld を更新したら、Hugging Face Datasets 上の mirror にも同期する。HF は LLM training pipeline / knowledge-graph crawler の primary ingest source として機能する（HF dataset は Auto-converted to Parquet が走り、`pandas` / `Polars` / `Datasets` ライブラリから直接 load 可能になる）。
 
-### Workflow
+**正本は [`hf-sync`](../hf-sync/SKILL.md) skill にある**。`/hf-sync <Owner/dataset>` または `bash ~/.claude/skills/hf-sync/sync.sh <Owner/dataset>` を project root で実行すれば、`graph.jsonld` の structural check → `graph.jsonl` flatten → `hf upload` 2 ファイルが 1 コマンドで走る。Local の `hf login` token を使うので CI auth setup は不要。
 
-```bash
-# 1. graph.jsonl を再生成 (HF Dataset Viewer 用に @graph array を 1 行 1 node に flatten)
-jq -c '.["@graph"][]' graph.jsonld > graph.jsonl
+`release-doi` skill の Phase 5 末尾（tag push + `gh release create` の後）で呼ぶのが標準フロー。ad-hoc resync にも同じ skill を使う。
 
-# 2. GitHub push (通常通り)
-git add graph.jsonld graph.jsonl && git commit -m "..." && git push
+**Wikidata QID の sameAs 編入は [`wikidata-federation`](../wikidata-federation/SKILL.md) skill が担う**（Wikidata item 作成 → graph ノードへの QID アンカー。フォーマット保存編集と意味的検証つき）。graph 設計の正本は本 skill、Wikidata 連邦の operational layer は wikidata-federation、という役割分離。
 
-# 3. HF mirror に push (graph.jsonld と graph.jsonl 両方)
-hf upload <HF_REPO_ID> graph.jsonld --repo-type dataset
-hf upload <HF_REPO_ID> graph.jsonl --repo-type dataset
-```
-
-HF 側の `README.md` (dataset card) は graph 更新では同期しない。Dataset card は HF 用に customize されている（sibling dataset への link、mirror notice 等）ので、文面を変えたい場合は手動で `hf upload <HF_REPO_ID> README.md --repo-type dataset`。
+HF 側の `README.md` (dataset card) は graph 更新では同期しない。Dataset card は HF 用に customize されている（sibling dataset への link、mirror notice 等）ので、文面を変えたい場合は手動で `hf upload <Owner/dataset> README.md --repo-type dataset`。
 
 ### Repo mapping (project-specific)
 
-GitHub repo ↔ HF dataset の mapping は project ごとに違うので、skill invoke 時に参照できる場所（project の `CLAUDE.md`、または skill 同一 dir の `inspiration.md`）に記録する。本文には embed しない（portability 確保）。
+GitHub repo ↔ HF dataset の mapping は project ごとに違うので、skill invoke 時に参照できる場所（project の `CLAUDE.md`、または skill 同一 dir の `inspiration.md`）に記録する。`hf-sync` 本文には embed しない（portability 確保）。
 
 Mapping の記録 format 例:
 
@@ -313,7 +362,7 @@ Mapping の記録 format 例:
 
 ### When NOT to use this sync
 
-- HF dataset がまだ存在しない project（先に `hf repo create <HF_REPO_ID> --repo-type dataset` で repo 作成、README.md を draft してから initial upload）
+- HF dataset がまだ存在しない project（先に `hf repo create <Owner/dataset> --repo-type dataset` で repo 作成、README.md を draft してから initial upload）
 - そもそも graph.jsonld を持たない project（HF mirror は graph を持つ project のみ）
 - Token が write scope を持たない（HF settings で Fine-grained / Write token を発行し直す）
 
