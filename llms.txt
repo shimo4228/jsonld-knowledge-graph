@@ -1,12 +1,15 @@
 # jsonld-knowledge-graph
 
-> A Claude Code skill (documentation-only, MIT, v0.1.0) that designs and ships a companion JSON-LD knowledge graph (`graph.jsonld`) next to `llms.txt` for projects with stable concept-level structure. Encodes domain entities and relationships as schema.org triples so LLM search engines (ChatGPT, Perplexity, Gemini, Claude) can cite the structure machine-readably. Pairs with `llms-txt-writer` (which owns prose / navigator wording).
+> A Claude Code skill (instructions plus one bundled lint script, MIT, v0.1.0) that designs and ships a companion JSON-LD knowledge graph (`graph.jsonld`) next to `llms.txt` for projects with stable concept-level structure. Encodes domain entities and relationships as schema.org triples so LLM search engines (ChatGPT, Perplexity, Gemini, Claude) get the relationships as explicit statements and can resolve the project's entities. Pairs with `llms-txt-writer` (which owns prose / navigator wording).
+
+Status: active, synced one way from the author's Claude Code harness by `scripts/sync-from-local.sh` (it never commits), so this repository can trail the harness between syncs. The skill sits in the author's [Authorship Strategy](https://github.com/shimo4228/authorship-strategy) line (concept DOI 10.5281/zenodo.20263316); the author's practice lines are listed on the hub [shimo4228](https://github.com/shimo4228/shimo4228).
 
 ## Core documentation
 
-- [SKILL.md](skills/jsonld-knowledge-graph/SKILL.md): full skill specification — when-to-use gate, 9 reusable design moves, schema vocabulary design criteria, cross-graph `@id` discipline, bilingual strategy, companion file wiring, verification workflow, Hugging Face Datasets mirror sync, maintenance contract
+- [SKILL.md](skills/jsonld-knowledge-graph/SKILL.md): full skill specification (in Japanese) — when-to-use gate, concept-layer-only boundary (file-level structure is derived from code, never stored), 9 reusable design moves, schema vocabulary design criteria, cross-graph `@id` discipline, bilingual strategy, companion file wiring, lint-based verification workflow, a pointer to a separate `hf-sync` skill for the Hugging Face mirror, maintenance contract
+- [graph_lint.py](skills/jsonld-knowledge-graph/scripts/graph_lint.py): the bundled lint (`uv run --with pyld python3`); reports DROPPED-KEY, URL-LITERAL, VOLATILE, and NAME-DRIFT across several graphs; exit 0 clean, 1 findings, 2 fatal
 - [inspiration.md](skills/jsonld-knowledge-graph/inspiration.md): origin story and canonical implementation pointers (kept separate from `SKILL.md` for portability)
-- [README.md](README.md): human-facing narrative (install, how it works, key concept, related skills)
+- [README.md](README.md): human-facing narrative (when to use, install, how it works, key concept, what it does not do, verification)
 - [CHANGELOG.md](CHANGELOG.md): release notes (v0.1.0 initial release)
 
 ## The 9 design moves
@@ -25,7 +28,7 @@ The skill prescribes nine reusable moves that turn an ad-hoc JSON-LD file into a
 
 ## Hugging Face Datasets mirror sync
 
-When `graph.jsonld` is updated and pushed to GitHub, the skill recommends also pushing to a Hugging Face Datasets mirror. HF acts as a primary ingest source for LLM training pipelines and knowledge-graph crawlers, and HF's Auto-converted-to-Parquet makes the graph loadable from `pandas` / `Polars` / `Datasets` directly. The workflow flattens `@graph` array to `.jsonl` (one node per line) via `jq -c`, pushes both `graph.jsonld` and `graph.jsonl` via `hf upload`, and keeps the HF dataset card (`README.md`) manually maintained because it carries HF-specific mirror notices. The GitHub repo ↔ HF dataset mapping is project-specific and lives outside `SKILL.md` (in `CLAUDE.md` or `inspiration.md`) to preserve portability.
+After a `graph.jsonld` edit, `SKILL.md` suggests also uploading the graph to a Hugging Face Datasets mirror, which HF auto-converts to Parquet so the graph loads from `pandas` / `Polars` / `Datasets`. The procedure, prerequisites, repo mapping and token scope belong to a separate `hf-sync` skill that this repository does not include; it is published in [claude-harness](https://github.com/shimo4228/claude-harness/tree/main/skills/hf-sync). The step sends the file outside your machine.
 
 ## Standard reference
 
@@ -36,6 +39,7 @@ When `graph.jsonld` is updated and pushed to GitHub, the skill recommends also p
 ## Sibling skills
 
 - [llms-txt-writer](https://github.com/shimo4228/llms-txt-writer): owns prose / navigator wording for `llms.txt` / `llms-full.txt`. Reads this skill's reading-order block requirement.
-- [context-sync](https://github.com/shimo4228/context-sync): audits drift between `graph.jsonld` and CODEMAPS (Maintain phase).
+- [readme-writer](https://github.com/shimo4228/readme-writer): owns how the README points to `graph.jsonld` and `llms.txt` (a plain line at the end).
+- [context-sync](https://github.com/shimo4228/context-sync): audits drift between `graph.jsonld` and prose docs, and project doc role overlap / freshness (Maintain phase).
 - [search-first](https://github.com/shimo4228/search-first): research-before-coding workflow.
 - [claude-skill-writing-ecosystem](https://github.com/shimo4228/claude-skill-writing-ecosystem): human-facing writing orchestrator (different concern: human readers, not AI crawlers).
